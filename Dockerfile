@@ -6,6 +6,7 @@ WORKDIR /go/src/work
 COPY . .
 
 ENV GO111MODULE=on
+RUN go get -u github.com/cosmtrek/air
 EXPOSE 8080
 
-CMD ["go", "run", "main.go"]
+CMD ["air", "-c", ".air.toml"]
