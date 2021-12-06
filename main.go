@@ -16,9 +16,32 @@ import (
 
 const DefaultEndpoint = "https://api.switch-bot.com"
 
+type commandType string
+const (
+	command = commandType("command")
+	customize = commandType("customize")
+)
+
+type commandContent string
+const (
+	turnOn = commandContent("turnOn")
+	turnOff = commandContent("turnOff")
+	brightnessUp = commandContent("brightnessUp")
+	brightnessDown = commandContent("brightnessDown")
+	warmer = commandContent("光色 赤+")
+	cooler = commandContent("光色 青+")
+)
+
 type RequestBody struct {
-	Command string `json:"command"`
-	Type    string `json:"commandType,omitempty"`
+	Command commandContent `json:"command"`
+	Type    commandType `json:"commandType,omitempty"`
+}
+
+type RecieveBody struct {
+	Command	commandContent `json:"command"`
+	CommandType	commandType `json"commandType"`
+	Interval	int	`json:"interval"`
+	Times	*int	`json:"times"`
 }
 
 func env_load() {
@@ -47,10 +70,10 @@ func switchbot_post(deviceId string, command *RequestBody) {
 	fmt.Println(string(body))
 }
 
-func periodic(sec int, times int, deviceId string, command *RequestBody){
+func periodic(interval int, times int, deviceId string, command *RequestBody){
 	for i := 0; i < times; i++ {
 		switchbot_post(deviceId, command)
-		time.Sleep((time.Second * time.Duration(sec)))
+		time.Sleep((time.Second * time.Duration(interval)))
 	}
 }
 
@@ -62,18 +85,28 @@ func main() {
 
 	r := gin.Default()
 
-	r.GET("", func(c *gin.Context) {
-		fmt.Println(c.ClientIP())
-		fmt.Println(c.GetHeader("X-Real-IP"))
-		command := &RequestBody{
-			Command: "brightnessDown",
-//			Type: "customize",
+	r.POST("", func(c *gin.Context) {
+		var req RecieveBody
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
+		if req.Times == nil {
+			defaultTimes := 1
+			req.Times = &defaultTimes
+		}
+
+		fmt.Println(req)
+
+		command := &RequestBody{
+			Command: req.Command,
+			Type: req.CommandType,
+		}
+
 		for _, v := range Lights {
-			go periodic(10, 20, v, command)
+			go periodic(req.Interval, *req.Times, v, command)
 		}
 		c.JSON(200, gin.H{"response": "OK!"})
-
 	})
 
 	r.Run()
