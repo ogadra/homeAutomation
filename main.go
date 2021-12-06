@@ -54,7 +54,6 @@ func env_load() {
 func switchbot_post(deviceId string, command *RequestBody) {
 	reqBody, _ := json.Marshal(*command)
 	client := &http.Client{}
-	fmt.Println(string(reqBody))
 	req, _ := http.NewRequest("POST", DefaultEndpoint+"/v1.0/devices/"+deviceId+"/commands", bytes.NewBuffer(reqBody))
 	req.Header.Set("Authorization", os.Getenv("SBTOKEN"))
 	req.Header.Set("Content-Type", "application/json")
@@ -81,8 +80,6 @@ func main() {
 	env_load()
 	Lights := [2]string{os.Getenv("LIVINGLIGHT"), os.Getenv("PCLIGHT")}
 
-	fmt.Println("Hello, World!")
-
 	r := gin.Default()
 
 	r.POST("", func(c *gin.Context) {
@@ -96,17 +93,16 @@ func main() {
 			req.Times = &defaultTimes
 		}
 
-		fmt.Println(req)
-
 		command := &RequestBody{
 			Command: req.Command,
 			Type: req.CommandType,
 		}
+		c.JSON(200, gin.H{"response": "受付完了"})
 
 		for _, v := range Lights {
 			go periodic(req.Interval, *req.Times, v, command)
 		}
-		c.JSON(200, gin.H{"response": "OK!"})
+	
 	})
 
 	r.Run()
