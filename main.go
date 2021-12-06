@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -46,6 +47,13 @@ func switchbot_post(deviceId string, command *RequestBody) {
 	fmt.Println(string(body))
 }
 
+func periodic(sec int, times int, deviceId string, command *RequestBody){
+	for i := 0; i < times; i++ {
+		switchbot_post(deviceId, command)
+		time.Sleep((time.Second * time.Duration(sec)))
+	}
+}
+
 func main() {
 	env_load()
 	Lights := [2]string{os.Getenv("LIVINGLIGHT"), os.Getenv("PCLIGHT")}
@@ -62,7 +70,7 @@ func main() {
 //			Type: "customize",
 		}
 		for _, v := range Lights {
-			switchbot_post(v, command)
+			go periodic(10, 20, v, command)
 		}
 		c.JSON(200, gin.H{"response": "OK!"})
 
