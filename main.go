@@ -30,6 +30,7 @@ const (
 	brightnessDown = commandContent("brightnessDown")
 	warmer = commandContent("光色 赤+")
 	cooler = commandContent("光色 青+")
+	sleepingPreparation = commandContent("sleepingPreparation")
 )
 
 type RequestBody struct {
@@ -99,9 +100,27 @@ func main() {
 		}
 		c.JSON(200, gin.H{"response": "受付完了"})
 
-		for _, v := range Lights {
-			go periodic(req.Interval, *req.Times, v, command)
-		}
+		if command.Command == "sleepingPreparation" {
+			
+			commandBrightness := &RequestBody{
+				Command: "brightnessDown",
+			}
+
+			commandColor := &RequestBody{
+				Command: "光色 赤+",
+				Type: "customize",
+			}
+			
+			for _, v := range Lights {
+				go periodic(req.Interval, 20, v, commandBrightness)
+				go periodic(req.Interval, 18, v, commandColor)
+			}
+
+		} else {
+			for _, v := range Lights {
+				go periodic(req.Interval, *req.Times, v, command)
+			}
+	}
 	
 	})
 
