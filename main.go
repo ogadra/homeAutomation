@@ -62,9 +62,9 @@ func switchbot_post(deviceId string, command *RequestBody) {
 	res, err := client.Do(req)
 	if err != nil {
 		log.Println(err)
+	} else {
+		defer res.Body.Close()
 	}
-
-	defer res.Body.Close()
 
 	body, _ := ioutil.ReadAll(res.Body)
 	fmt.Println(string(body))
