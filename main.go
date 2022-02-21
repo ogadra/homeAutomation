@@ -61,7 +61,8 @@ func switchbot_post(deviceId string, command *RequestBody) {
 
 	res, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	defer res.Body.Close()
