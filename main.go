@@ -71,6 +71,11 @@ func switchbot_post(deviceId string, command *RequestBody) {
 	fmt.Println(string(body))
 }
 
+func delayExecution(time int, deviceId string, command *RequestBody){
+	time.Sleep((time.Second * time.Duration(time)))
+	switchbot_post(deviceId, command)
+}
+
 func periodic(interval int, times int, deviceId string, command *RequestBody){
 	for i := 0; i < times; i++ {
 		switchbot_post(deviceId, command)
@@ -111,11 +116,16 @@ func main() {
 				Command: "光色 赤+",
 				Type: "customize",
 			}
+
+			commandTurnOff := &RequestBody{
+				Command: "turnOff"
+			}
 			
 			for _, v := range Lights {
 				go periodic(req.Interval, 20, v, commandBrightness)
 				go periodic(req.Interval, 18, v, commandColor)
 			}
+			go delayExecution((req.Interval * 20), PCLIGHT, turnOff)
 
 		} else {
 			for _, v := range Lights {
